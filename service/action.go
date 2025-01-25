@@ -5,6 +5,7 @@ import (
 
 	"github.com/ThreeCatsLoveFish/medalhelper/dto"
 	"github.com/ThreeCatsLoveFish/medalhelper/manager"
+	"github.com/ThreeCatsLoveFish/medalhelper/util"
 )
 
 type SyncWatchLive struct {
@@ -24,9 +25,9 @@ type WatchLive struct{}
 func (WatchLive) Do(user User, medal dto.MedalInfo, n int) bool {
 	var times int
 	if medal.Medal.Level < 20 {
-		times = 25
+		times = util.GlobalConfig.CD.WatchingLive
 	} else {
-		times = 5
+		times = util.GlobalConfig.CD.WatchingLive20
 	}
 	for i := 1; i <= times; i++ {
 		if ok := manager.Heartbeat(

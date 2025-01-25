@@ -15,9 +15,11 @@ type Config struct {
 }
 
 type CoolDown struct {
-	Async  int `yaml:"async"`
-	Retry  int `yaml:"retry"`
-	MaxTry int `yaml:"max_try"`
+	Async          int `yaml:"async"`
+	Retry          int `yaml:"retry"`
+	MaxTry         int `yaml:"max_try"`
+	WatchingLive   int `yaml:"watching_live"`
+	WatchingLive20 int `yaml:"watching_live_20"`
 }
 
 type Endpoint struct {
