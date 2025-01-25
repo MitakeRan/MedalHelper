@@ -92,7 +92,7 @@ func (user *User) setMedals() {
 		for _, medal := range medals {
 			if util.IntContain(user.allowedUIDs, medal.Medal.TargetID) != -1 {
 				user.medalsLow = append(user.medalsLow, medal)
-				if medal.Medal.TodayFeed < 1500 {
+				if medal.Medal.Level < 20 && medal.Medal.TodayFeed < 1500 || medal.Medal.TodayFeed < 300 {
 					user.remainMedals = append(user.remainMedals, medal)
 					user.info(fmt.Sprintf("%s 在白名单中，加入任务", medal.AnchorInfo.NickName))
 				}
@@ -137,7 +137,7 @@ func (user *User) checkMedals() bool {
 		user.message += fmt.Sprintf(
 			"【当前佩戴】「%s」(%s) %d 级 \n",
 			user.wearMedal.Medal.MedalName,
-			user.wearMedal.Medal.TargetName, user.wearMedal.Medal.Level,
+			user.wearMedal.AnchorInfo.NickName, user.wearMedal.Medal.Level,
 		)
 		if user.wearMedal.Medal.Level < 20 && user.wearMedal.Medal.TodayFeed != 0 {
 			need := user.wearMedal.Medal.NextIntimacy - user.wearMedal.Medal.Intimacy
