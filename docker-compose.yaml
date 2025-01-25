@@ -1,0 +1,9 @@
+version: '3.3'
+services:
+  medalhelper:
+    build: .
+    container_name: medalhelper
+    image: mitakeran/medalhelper:latest
+    volumes:
+      - ./users.yaml:/config/users.yaml
+    restart: on-failure

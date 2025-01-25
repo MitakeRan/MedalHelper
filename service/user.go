@@ -15,7 +15,6 @@ import (
 	"github.com/TwiN/go-color"
 	"github.com/google/uuid"
 	"github.com/sethvargo/go-retry"
-	"github.com/tidwall/gjson"
 )
 
 type User struct {
@@ -79,29 +78,6 @@ func (user *User) loginVerify() bool {
 	return true
 }
 
-func (user *User) signIn() {
-	signInfo, err := manager.SignIn(user.accessKey)
-	if err != nil {
-		return
-	}
-	resp := gjson.Parse(signInfo)
-	if resp.Get("code").Int() == 0 {
-		signed := resp.Get("data.hadSignDays").String()
-		all := resp.Get("data.allDays").String()
-		user.info("签到成功, 本月签到次数: %s/%s", signed, all)
-	} else {
-		user.info("%s", resp.Get("message").String())
-	}
-
-	userInfo, err := manager.GetUserInfo(user.accessKey)
-	if err != nil {
-		return
-	}
-	level := userInfo.Data.Exp.UserLevel
-	unext := userInfo.Data.Exp.Unext
-	user.info("当前用户UL等级: %d, 还差 %d 经验升级", level, unext)
-}
-
 func (user *User) setMedals() {
 	// Clean medals storage
 	user.medalsLow = make([]dto.MedalInfo, 0, 10)
@@ -116,8 +92,9 @@ func (user *User) setMedals() {
 		for _, medal := range medals {
 			if util.IntContain(user.allowedUIDs, medal.Medal.TargetID) != -1 {
 				user.medalsLow = append(user.medalsLow, medal)
-				if medal.Medal.TodayFeed < 1300 {
+				if medal.Medal.TodayFeed < 1500 {
 					user.remainMedals = append(user.remainMedals, medal)
+					user.info(fmt.Sprintf("%s 在白名单中，加入任务", medal.AnchorInfo.NickName))
 				}
 			}
 		}
@@ -152,10 +129,27 @@ func (user *User) checkMedals() bool {
 		}
 	}
 	user.message = fmt.Sprintf(
-		"20级以下牌子共 %d 个\n【1500】%d个\n【1500以下】 %v等 %d个\n",
-		len(user.medalsLow), len(fullMedalList),
+		"20级以下牌子共 %d 个\n【1500】 %v等 %d个\n【1500以下】 %v等 %d个\n",
+		len(user.medalsLow), fullMedalList, len(fullMedalList),
 		failMedalList, len(failMedalList),
 	)
+	if user.wearMedal != (dto.MedalInfo{}) {
+		user.message += fmt.Sprintf(
+			"【当前佩戴】「%s」(%s) %d 级 \n",
+			user.wearMedal.Medal.MedalName,
+			user.wearMedal.Medal.TargetName, user.wearMedal.Medal.Level,
+		)
+		if user.wearMedal.Medal.Level < 20 && user.wearMedal.Medal.TodayFeed != 0 {
+			need := user.wearMedal.Medal.NextIntimacy - user.wearMedal.Medal.Intimacy
+			needDays := need/1500 + 1
+			endDate := time.Now().AddDate(0, 0, needDays)
+			user.message += fmt.Sprintf(
+				"今日已获取亲密度 %d (B站结算有延迟，请耐心等待)\n距离下一级还需 %d 亲密度 预计需要 %d 天 (%s,以每日 1500 亲密度计算)\n",
+				user.wearMedal.Medal.TodayFeed, need,
+				needDays, endDate.Format("2006-01-02"),
+			)
+		}
+	}
 	user.info(user.message)
 	return len(fullMedalList) == len(user.medalsLow)
 }
@@ -184,7 +178,6 @@ func (user *User) expire() {
 
 func (user *User) Init() bool {
 	if user.loginVerify() {
-		user.signIn()
 		user.setMedals()
 		return true
 	} else {
@@ -198,16 +191,12 @@ func (user *User) RunOnce() bool {
 	switch util.GlobalConfig.CD.Async {
 	case 0: // Sync
 		task := NewTask(*user, []IAction{
-			&Like{},
-			&Danmaku{},
-			&WatchLive{},
+			&SyncWatchLive{},
 		})
 		task.Start()
 	case 1: // Async
 		task := NewTask(*user, []IAction{
-			&ALike{},
-			&Danmaku{},
-			&WatchLive{},
+			&AsyncWatchLive{},
 		})
 		task.Start()
 	}

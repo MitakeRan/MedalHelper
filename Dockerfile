@@ -7,6 +7,7 @@ ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 RUN go build -ldflags '-w -s' -o medalhelper .
 
 FROM istio/distroless
+ENV TZ="Asia/Shanghai"
 COPY --from=builder ["/build/medalhelper", "/"]"
 WORKDIR /config
 ENTRYPOINT ["/medalhelper"]

@@ -13,7 +13,7 @@ type IConcurrency interface {
 
 type IExec interface {
 	// Do represent real action
-	Do(user User, medal dto.MedalInfo) bool
+	Do(user User, medal dto.MedalInfo, n int) bool
 	// Finish represent action complete
 	Finish(user User, medal []dto.MedalInfo)
 }

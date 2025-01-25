@@ -3,7 +3,6 @@ package manager
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"strings"
 	"time"
 
@@ -192,33 +191,6 @@ func ShareRoom(accessKey string, roomId int) bool {
 	body, err := Post(rawUrl, util.Map2Params(data))
 	if err != nil {
 		util.Error("ShareRoom error: %v, data: %v", err, data)
-	}
-	var resp dto.BiliBaseResp
-	if err = json.Unmarshal(body, &resp); err != nil {
-		util.Error("Unmarshal BiliBaseResp error: %v, raw data: %v", err, body)
-	}
-	return resp.Code == 0
-}
-
-func SendDanmaku(accessKey string, roomId int) bool {
-	rawUrl := "https://api.live.bilibili.com/xlive/app-room/v1/dM/sendmsg"
-	params := map[string]string{
-		"access_key": accessKey,
-		"actionKey":  "appkey",
-		"appkey":     util.AppKey,
-		"ts":         util.GetTimestamp(),
-	}
-	data := map[string]string{
-		"cid":      fmt.Sprint(roomId),
-		"msg":      util.GlobalConfig.Danmuku[rand.Intn(len(util.GlobalConfig.Danmuku))],
-		"rnd":      util.GetTimestamp(),
-		"color":    "16777215",
-		"fontsize": "25",
-	}
-	util.Signature(&params)
-	body, err := PostWithParam(rawUrl, util.Map2Params(params), util.Map2Params(data))
-	if err != nil {
-		util.Error("GetFansMedalAndRoomID error: %v, data: %v", err, data)
 	}
 	var resp dto.BiliBaseResp
 	if err = json.Unmarshal(body, &resp); err != nil {

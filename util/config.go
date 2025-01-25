@@ -9,7 +9,6 @@ var GlobalConfig Config
 
 type Config struct {
 	UserList  []User     `yaml:"USERS"`
-	Danmuku   []string   `yaml:"DANMU"`
 	Endpoints []Endpoint `yaml:"PUSH"`
 	CD        CoolDown   `yaml:"CD"`
 	Cron      string     `yaml:"CRON"`
@@ -19,9 +18,6 @@ type CoolDown struct {
 	Async  int `yaml:"async"`
 	Retry  int `yaml:"retry"`
 	MaxTry int `yaml:"max_try"`
-	Like   int `yaml:"like"`
-	Share  int `yaml:"share"`
-	Danmu  int `yaml:"danmu"`
 }
 
 type Endpoint struct {

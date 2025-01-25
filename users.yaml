@@ -1,8 +1,8 @@
 USERS:
-  - access_key: XXXXXX # 注意冒号后的空格 否则会读取失败 英文冒号
-    allowed_uid: #123,666 # 白名单UID,填了后将覆盖配置只打卡，点赞，分享这些用户的勋章 用英文逗号分隔 不填则不限制
-    banned_uid: 789,100 # 黑名单UID,填了后将不会打卡，点赞，分享 用英文逗号分隔 不填则不限制
-    push_name: PUSH_DEER_SAMPLE # 推送服务，留空表示不需要推送
+  - access_key: 7bdc54ed99e6e3fdf70017ae409e88b2 # 注意冒号后的空格 否则会读取失败 英文冒号
+    allowed_uid: 35147959,1855519979,2000609327,1908273021,672328094,672353429,672342685,233592835 # 白名单UID,填了后将覆盖配置只打卡，点赞，分享这些用户的勋章 用英文逗号分隔 不填则不限制
+    banned_uid: # 黑名单UID,填了后将不会打卡，点赞，分享 用英文逗号分隔 不填则不限制
+    push_name: # 推送服务，留空表示不需要推送
   - access_key:
     allowed_uid:
     banned_uid:
@@ -10,53 +10,12 @@ USERS:
   # 注意对齐
   # 多用户以上格式添加
   # 井号后为注释 井号前后必须有空格
-DANMU:
-  [
-    "(⌒▽⌒).",
-    "（￣▽￣）.",
-    "(=・ω・=).",
-    "(｀・ω・´).",
-    "(〜￣△￣)〜.",
-    "(･∀･).",
-    "(°∀°)ﾉ.",
-    "(￣3￣).",
-    "╮(￣▽￣)╭.",
-    "_(:3」∠)_.",
-    "(^・ω・^ ).",
-    "(●￣(ｴ)￣●).",
-    "ε=ε=(ノ≧∇≦)ノ.",
-    "⁄(⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄.",
-    "←◡←.",
-  ]
-  # 可在此处自定义打卡弹幕
-CRON: #3 2 1 * *
+CRON: # 3 2 1 * *
 # 这里是 cron 表达式, 从左到右参数为秒，分钟，小时，日期，月份
 # Second | Minute | Hour | Dom | Month
 # 例如每天凌晨01点02分03秒执行一次为 3 2 1 * *
 # 如果不填,则不使用内置定时器,填写正确后要保持该进程一直运行
 CD:
-  async: 1 # 异步执行，默认为1表示异步，0表示同步
+  async: 0 # 异步执行，默认为1表示异步，0表示同步
   retry: 1 # 任务失败重试时间，单位秒，设置为0不重试
   max_try: 10 # 任务失败最多重试次数，单位次，设置为0不重试
-  like: 2 # 点赞间隔时间，单位秒，设置为0不点赞
-  share: 5 # 【已废弃】分享间隔时间，单位秒，设置为0不分享
-  danmu: 6 # 弹幕间隔时间，单位秒，设置为0不发送弹幕，只支持同步
-PUSH:
-  - name: "PUSH_DEER_SAMPLE" # 推送名称，对应上面对应用户的推送，请保证名称唯一
-    token: "<YOUR-TOKEN-HERE>" # 推送服务TOKEN
-    type: "push_deer" # 推送服务类型为 PushDeer
-    url: "http://<pushdeer-url-or-ip>/message/push" # 推送服务URL
-  - name: "PUSH_PLUS_SAMPLE"
-    token: "<YOUR-TOKEN-HERE>"
-    type: "push_plus"
-    url: "http://www.pushplus.plus/send"
-  - name: "TELEGRAM_SAMPLE"
-    token: "<YOUR-TELEGRAM-CHATID>"
-    type: "telegram"
-    url: "https://api.telegram.org/bot<YOUR-BOT-TOKEN-HERE>/sendMessage"
-  - name: "BARK"
-    token: "<YOUR-TOKEN-HERE>"
-    type: "bark"
-    url: "http://<bark-url-or-ip>/push"
-  # 推送服务，每日打卡成功或报错日志推送
-  # 目前支持PushDeer, PushPlus, Telegram, Bark
