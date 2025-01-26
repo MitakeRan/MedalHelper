@@ -39,7 +39,7 @@ func (WatchLive) Do(user User, medal dto.MedalInfo, n int) bool {
 			return false
 		}
 		if i%5 == 0 {
-			user.info("%s 第%d次心跳包已发送(%d/%d)", medal.AnchorInfo.NickName, i, n, len(user.remainMedals))
+			user.info("%s 第%d次心跳包已发送(%d/%d)", medal.AnchorInfo.NickName, i, n, len(user.remainMedals)+len(user.remainMedals20))
 		}
 		time.Sleep(1 * time.Minute)
 	}
@@ -50,6 +50,6 @@ func (WatchLive) Finish(user User, medal []dto.MedalInfo) {
 	if len(medal) == 0 {
 		user.info("每日25分钟完成")
 	} else {
-		user.info("每日25分钟未完成,剩余(%d/%d)", len(medal), len(user.medalsLow))
+		user.info("每日25分钟未完成,剩余(%d/%d)", len(medal), len(user.medalsLow)+len(user.medals20))
 	}
 }

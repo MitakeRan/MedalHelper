@@ -16,7 +16,7 @@ import (
 type SyncAction struct{}
 
 func (a *SyncAction) Exec(user User, job *sync.WaitGroup, child IExec) []dto.MedalInfo {
-	fail := make([]dto.MedalInfo, 0, len(user.medalsLow))
+	fail := make([]dto.MedalInfo, 0, len(user.medalsLow)+len(user.medals20))
 	for i, medal := range user.remainMedals {
 		retryTime := util.GlobalConfig.CD.Retry
 		if retryTime == 0 {
@@ -28,6 +28,26 @@ func (a *SyncAction) Exec(user User, job *sync.WaitGroup, child IExec) []dto.Med
 			backOff = retry.WithMaxRetries(uint64(util.GlobalConfig.CD.MaxTry), backOff)
 			err := retry.Do(context.Background(), backOff, func(ctx context.Context) error {
 				if ok := child.Do(user, medal, i+1); !ok {
+					return retry.RetryableError(errors.New("action fail"))
+				}
+				return nil
+			})
+			if err != nil {
+				fail = append(fail, medal)
+			}
+		}
+	}
+	for i, medal := range user.remainMedals20 {
+		retryTime := util.GlobalConfig.CD.Retry
+		if retryTime == 0 {
+			if ok := child.Do(user, medal, len(user.remainMedals)+i+1); !ok {
+				fail = append(fail, medal)
+			}
+		} else {
+			backOff := retry.NewFibonacci(time.Duration(retryTime) * time.Second)
+			backOff = retry.WithMaxRetries(uint64(util.GlobalConfig.CD.MaxTry), backOff)
+			err := retry.Do(context.Background(), backOff, func(ctx context.Context) error {
+				if ok := child.Do(user, medal, len(user.remainMedals)+i+1); !ok {
 					return retry.RetryableError(errors.New("action fail"))
 				}
 				return nil

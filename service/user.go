@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -42,6 +43,10 @@ type User struct {
 	medalsLow []dto.MedalInfo
 	// 今日亲密度没满的勋章
 	remainMedals []dto.MedalInfo
+	// 用户等级20的勋章
+	medals20 []dto.MedalInfo
+	// 今日未观看的20级勋章
+	remainMedals20 []dto.MedalInfo
 
 	// 日志信息
 	message string
@@ -81,6 +86,7 @@ func (user *User) loginVerify() bool {
 func (user *User) setMedals() {
 	// Clean medals storage
 	user.medalsLow = make([]dto.MedalInfo, 0, 10)
+	user.medals20 = make([]dto.MedalInfo, 0, 10)
 	user.remainMedals = make([]dto.MedalInfo, 0, 10)
 	// Fetch and update medals
 	medals, wearMedal := manager.GetMedal(user.accessKey)
@@ -91,10 +97,18 @@ func (user *User) setMedals() {
 	if len(user.allowedUIDs) > 0 {
 		for _, medal := range medals {
 			if util.IntContain(user.allowedUIDs, medal.Medal.TargetID) != -1 {
-				user.medalsLow = append(user.medalsLow, medal)
-				if medal.Medal.Level < 20 && medal.Medal.TodayFeed < 1500 || medal.Medal.TodayFeed < 300 {
-					user.remainMedals = append(user.remainMedals, medal)
-					user.info(fmt.Sprintf("%s 在白名单中，加入任务", medal.AnchorInfo.NickName))
+				if medal.Medal.Level < 20 {
+					user.medalsLow = append(user.medalsLow, medal)
+					if medal.Medal.TodayFeed < 1500 {
+						user.remainMedals = append(user.remainMedals, medal)
+						user.info(fmt.Sprintf("%s 在白名单中，加入任务", medal.AnchorInfo.NickName))
+					}
+				} else {
+					user.medals20 = append(user.medals20, medal)
+					if medal.Medal.TodayFeed < 300 {
+						user.remainMedals20 = append(user.remainMedals20, medal)
+						user.info(fmt.Sprintf("%s 在白名单中，加入任务", medal.AnchorInfo.NickName))
+					}
 				}
 			}
 		}
@@ -121,6 +135,8 @@ func (user *User) checkMedals() bool {
 	user.setMedals()
 	fullMedalList := make([]string, 0, len(user.medalsLow))
 	failMedalList := make([]string, 0)
+	fullMedal20List := make([]string, 0, len(user.medals20))
+	failMedal20List := make([]string, 0)
 	for _, medal := range user.medalsLow {
 		if medal.Medal.TodayFeed == 1500 {
 			fullMedalList = append(fullMedalList, medal.AnchorInfo.NickName)
@@ -128,10 +144,19 @@ func (user *User) checkMedals() bool {
 			failMedalList = append(failMedalList, medal.AnchorInfo.NickName)
 		}
 	}
+	for _, medal := range user.medals20 {
+		if medal.Medal.TodayFeed >= 300 {
+			fullMedal20List = append(fullMedal20List, medal.AnchorInfo.NickName)
+		} else {
+			failMedal20List = append(failMedal20List, medal.AnchorInfo.NickName)
+		}
+	}
 	user.message = fmt.Sprintf(
-		"20级以下牌子共 %d 个\n【1500】 %v等 %d个\n【1500以下】 %v等 %d个\n",
-		len(user.medalsLow), fullMedalList, len(fullMedalList),
-		failMedalList, len(failMedalList),
+		"20级牌子共 %d 个\n 【300以上】 %v等 %d个\n 【0】 %v等 %d个\n20级以下牌子共 %d 个\n【1500】 %v等 %d个\n【1500以下】 %v等 %d个\n",
+		len(user.medals20), strings.Trim(fmt.Sprint(fullMedal20List), "[]"), len(fullMedal20List),
+		strings.Trim(fmt.Sprint(failMedal20List), "[]"), len(failMedal20List),
+		len(user.medalsLow), strings.Trim(fmt.Sprint(fullMedalList), "[]"), len(fullMedalList),
+		strings.Trim(fmt.Sprint(failMedalList), "[]"), len(failMedalList),
 	)
 	if user.wearMedal != (dto.MedalInfo{}) {
 		user.message += fmt.Sprintf(
@@ -150,7 +175,11 @@ func (user *User) checkMedals() bool {
 			)
 		}
 	}
-	user.info(user.message)
+	for _, message := range strings.Split(user.message, "\n") {
+		if message != "" {
+			user.info(message)
+		}
+	}
 	return len(fullMedalList) == len(user.medalsLow)
 }
 
